@@ -1,0 +1,79 @@
+{
+  "name": "life-game",
+  "version": "1.0.0",
+  "description": "2D Virtual Companion life simulator — Expo + Skia + Reanimated + MMKV + Zustand + Supabase",
+  "main": "expo-router/entry",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit",
+    "test": "jest --ci",
+    "test:watch": "jest --watch",
+    "verify": "npm run lint && npm run typecheck && npm run test",
+    "secret:generate": "node scripts/generate-client-secret.mjs",
+    "doctor": "expo-doctor",
+    "supabase:start": "supabase start",
+    "supabase:reset": "supabase db reset",
+    "supabase:functions": "supabase functions serve --env-file supabase/functions/.env"
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.4.0",
+    "@react-native-community/netinfo": "12.0.1",
+    "@shopify/react-native-skia": "2.6.2",
+    "@supabase/supabase-js": "^2.117.2",
+    "expo": "~57.0.25",
+    "expo-constants": "~57.0.19",
+    "expo-crypto": "~57.0.3",
+    "expo-dev-client": "~57.0.19",
+    "expo-font": "~57.0.4",
+    "expo-haptics": "~57.0.3",
+    "expo-linking": "~57.0.11",
+    "expo-localization": "~57.0.2",
+    "expo-router": "~57.0.23",
+    "expo-secure-store": "~57.0.4",
+    "expo-splash-screen": "~57.0.9",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-mmkv": "^4.3.2",
+    "react-native-nitro-modules": "^0.37.1",
+    "react-native-reanimated": "4.5.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-url-polyfill": "^4.0.0",
+    "react-native-web": "^0.21.2",
+    "react-native-worklets": "0.10.1",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.20.4",
+    "@types/react": "~19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.2",
+    "jest": "^29.7.0",
+    "jest-expo": "^57.0.5",
+    "typescript": "~6.0.3"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "testMatch": [
+      "<rootDir>/src/**/*.test.ts",
+      "<rootDir>/src/**/*.test.tsx"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^@shared/(.*)$": "<rootDir>/supabase/functions/_shared/pure/$1"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@shopify/react-native-skia|react-native-reanimated|react-native-worklets|react-native-mmkv|react-native-nitro-modules|@noble/hashes|zustand)"
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+name: Mobile release (EAS)
+
+# Tag `v1.2.3` → production builds for iOS + Android, auto-submitted to the stores.
+# Manual dispatch lets you pick a profile (e.g. `preview` for internal testers).
+# Required secrets: EXPO_TOKEN, CLIENT_HMAC_SECRET, EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: EAS build profile
+        type: choice
+        options: [preview, production]
+        default: preview
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    env:
+      PROFILE: ${{ github.event.inputs.profile || 'production' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      - run: npm run verify
+
+      - name: Embed production HMAC key (obfuscated)
+        env:
+          LIFEGAME_CLIENT_HMAC_SECRET: ${{ secrets.CLIENT_HMAC_SECRET }}
+        run: npm run secret:generate
+
+      - name: Build & submit
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ "$PROFILE" = "production" ]; then
+            eas build --platform all --profile production --non-interactive --no-wait --auto-submit
+          else
+            eas build --platform all --profile "$PROFILE" --non-interactive --no-wait
+          fi
