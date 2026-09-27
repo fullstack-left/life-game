@@ -1,0 +1,58 @@
+name: Deploy backend (Supabase)
+
+# Migrations and Edge Functions ship automatically when main changes under supabase/.
+# Required repository secrets:
+#   SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF, SUPABASE_DB_PASSWORD,
+#   CLIENT_HMAC_SECRET, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, DB_POOLER_URL (optional)
+on:
+  push:
+    branches: [main]
+    paths: ['supabase/**']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false # never interrupt a migration midway
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref "$PROJECT_REF"
+
+      - name: Apply database migrations
+        run: supabase db push --include-all
+
+      - name: Sync function secrets
+        env:
+          CLIENT_HMAC_SECRET: ${{ secrets.CLIENT_HMAC_SECRET }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+          DB_POOLER_URL: ${{ secrets.DB_POOLER_URL }}
+        run: |
+          supabase secrets set --project-ref "$PROJECT_REF" \
+            ENVIRONMENT=production \
+            CLIENT_HMAC_SECRET="$CLIENT_HMAC_SECRET" \
+            UPSTASH_REDIS_REST_URL="$UPSTASH_REDIS_REST_URL" \
+            UPSTASH_REDIS_REST_TOKEN="$UPSTASH_REDIS_REST_TOKEN" \
+            ${DB_POOLER_URL:+DB_POOLER_URL="$DB_POOLER_URL"}
+
+      - name: Deploy Edge Functions
+        run: |
+          supabase functions deploy start-game --project-ref "$PROJECT_REF"
+          supabase functions deploy process-score --project-ref "$PROJECT_REF"
